@@ -1,7 +1,13 @@
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+import config as c
 
-app = Client("my_bot")
+app = Client(
+    "x", 
+    api_id=c.api_id, 
+    api_hash=c.api_hash,
+    bot_token=c.bot_token,
+)
 
 @app.on_message(filters.command("start"))
 def start_command(client, message):
