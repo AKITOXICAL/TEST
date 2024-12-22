@@ -9,7 +9,7 @@ app = Client(
     bot_token=c.bot_token,
 )
 
-app.on_message(filters.command(["start"]))
+@app.on_message(filters.command(["start"]))
 def start_command(client, message):
     # Reply with a photo
     client.send_photo(
