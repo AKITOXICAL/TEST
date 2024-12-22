@@ -3,6 +3,7 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import config as c
 import pymongo
 import string 
+from pymongo import MongoClient
 
 # Connect to MongoDB
 client = MongoClient("mongodb+srv://publicDB:publicDBbyKira@public.twckcqf.mongodb.net/?retryWrites=true&w=majority")
