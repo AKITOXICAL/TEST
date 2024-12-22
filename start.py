@@ -23,7 +23,7 @@ styles = ["Water", "Fire", "Wind", "Earth", "Thunder", "Darkness", "Light", "Nat
 random_style = random.choice(styles)
 
 # Start command handler
-@app.on_message(filters.command(["start"]) & filter.private)
+@app.on_message(filters.command(["start"]) & filters.private)
 async def start_command(client, message):
     user_id = message.from_user.id
     username = message.from_user.username
