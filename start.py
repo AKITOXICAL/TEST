@@ -31,7 +31,7 @@ def refer_command(bot, message):
     user_id = message.from_user.id
     referral_link = f"https://t.me/Anime_X_Isekai_Bot{user_id}"
     
-    bot.send_photo(chat_id=message.chat.id, photo="computer.jpg", caption=f"Your Referral Link: {referral_link}")
+    bot.send_photo(chat_id=message.chat.id, photo="http://ibb.co/2Zy9qCb", caption=f"Your Referral Link: {referral_link}")
     
     if user_id == message.reply_to_message.from_user.id:
         bot.reply_text(chat_id=message.chat.id, text="Clicking On Own Link Damn.")
@@ -47,7 +47,7 @@ def myrefer_command(bot, message):
     user_id = message.from_user.id
     user_refers = referrals.find_one({"user_id": user_id})["referrals"]
     
-    bot.send_photo(chat_id=message.chat.id, photo="computer.jpg", caption=f"You Have Referred {user_refers}")
+    bot.send_photo(chat_id=message.chat.id, photo="http://ibb.co/2Zy9qCb", caption=f"You Have Referred {user_refers}")
 
 # Leaderboard command
 @app.on_message(filters.command("leaderboard"))
