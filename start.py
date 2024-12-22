@@ -1,12 +1,13 @@
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import config as c
-from pymongo import MongoClient
+import pymongo
+import string 
 
 # Connect to MongoDB
 client = MongoClient("mongodb+srv://publicDB:publicDBbyKira@public.twckcqf.mongodb.net/?retryWrites=true&w=majority")
-db = client["referral_bot"]
-referrals = db["referrals"]
+db = client["x"]
+collection = db["start"]
 
 app = Client(
     "x", 
@@ -15,50 +16,93 @@ app = Client(
     bot_token=c.bot_token,
 )
 
-@app.on_message(filters.command("start"))
-def start_command(client, message):
-    photo = "http://ibb.co/sRMYPzM"
-    caption = "Wassup Welcome"
-    group_button = InlineKeyboardButton("Group", url="https://t.me/Anime_X_Isekai_Verse")
-    channel_button = InlineKeyboardButton("Channel", url="https://t.me/Anime_X_Isekai")
-    reply_markup = InlineKeyboardMarkup([[group_button, channel_button]])
-    
-    message.reply_photo(photo, caption=caption, reply_markup=reply_markup)
+# Generate random style
+styles = ["Water", "Fire", "Wind", "Earth", "Thunder", "Darkness", "Light", "Nature"]
+random_style = random.choice(styles)
 
-# Refer command
-@app.on_message(filters.command("refer"))
-def refer_command(bot, message):
+# Start command handler
+@app.on_message(filters.command(["start"]) & filter.private)
+async def start_command(client, message):
     user_id = message.from_user.id
-    referral_link = f"https://t.me/Anime_X_Isekai_Bot?start={user_id}"
+    username = message.from_user.username
+    chat_id = message.chat.id
     
-    bot.send_photo(chat_id=message.chat.id, photo="http://ibb.co/2Zy9qCb", caption=f"Your Referral Link: {referral_link}")
+    # Check if user has already started the bot
+    if collection.find_one({"user_id": user_id}):
+        await message.reply_text("You have already started the bot. Keep the language in English.")
+        return
     
-    if user_id == message.reply_to_message.from_user.id:
-        bot.reply_text(chat_id=message.chat.id, text="Clicking On Own Link Damn.")
-    else:
-        if referrals.find_one({"user_id": user_id}):
-            bot.reply_text(chat_id=message.chat.id, text="You Already Started Bot.")
-        else:
-            referrals.insert_one({"user_id": user_id, "referrals": 0})
+    # Send initial message
+    await client.send_photo(chat_id, "http://ibb.co/nrXh1wp", caption="𝗪𝗲𝗹𝗰𝗼𝗺𝗲,\n\n 𝗧𝗼 𝗔𝗻𝗶𝗺𝗲 𝗔𝗸𝗮 𝗜𝘀𝗲𝗸𝗮𝗶 𝗪𝗼𝗿𝗹𝗱.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Begin", callback_data="begin")]]))
 
-# Myrefer command
-@app.on_message(filters.command("myrefer"))
-def myrefer_command(bot, message):
-    user_id = message.from_user.id
-    user_refers = referrals.find_one({"user_id": user_id})["referrals"]
+# Callback query handler
+@app.on_callback_query(filters.regex("^begin$"))
+async def begin_callback(client, callback_query):
+    user_id = callback_query.from_user.id
+    chat_id = callback_query.message.chat.id
     
-    bot.send_photo(chat_id=message.chat.id, photo="http://ibb.co/2Zy9qCb", caption=f"You Have Referred {user_refers}")
-
-# Leaderboard command
-@app.on_message(filters.command("leaderboard"))
-def leaderboard_command(bot, message):
-    top_users = referrals.find().sort("referrals", -1).limit(7)
+    # Send welcome message
+    await callback_query.message.reply_text("𝐅𝐨𝐫 𝐑𝐞𝐠𝐢𝐬𝐭𝐞𝐫𝐢𝐧𝐠 𝐀𝐬 𝐀𝐝𝐯𝐞𝐧𝐭𝐮𝐫𝐞𝐫 𝐢𝐧 𝐖𝐨𝐫𝐥𝐝, 𝐄𝐧𝐭𝐞𝐫 𝐘𝐨𝐮𝐫 𝐍𝐚𝐦𝐞.")
     
-    leaderboard_text = "Top 7 Users:\n"
-    for index, user in enumerate(top_users, start=1):
-        leaderboard_text += f"{index}. User ID: {user['user_id']} - Referrals: {user['referrals']}\n"
+    # Save name in database
+    @app.on_message(filters.text & filters.private)
+    async def save_name(client, message):
+        name = message.text
+        
+        # Check for invalid characters in name
+        invalid_chars = [" ", ".", "@", "-", "/", "#"]
+        if any(char in name for char in invalid_chars):
+            await message.reply_text("You can only include _ in your name.")
+            return
+        
+        # Save name in database
+        collection.update_one({"user_id": user_id}, {"$set": {"name": name}})
+        
+        # Send message to enter username
+        await message.reply_text("𝐅𝐨𝐫 𝐑𝐞𝐠𝐢𝐬𝐭𝐞𝐫𝐢𝐧𝐠 𝐀𝐬 𝐀𝐝𝐯𝐞𝐧𝐭𝐮𝐫𝐞𝐫 𝐢𝐧 𝐖𝐨𝐫𝐥𝐝, 𝐄𝐧𝐭𝐞𝐫 𝐘𝐨𝐮𝐫 𝐔𝐬𝐞𝐫𝐧𝐚𝐦𝐞.")
     
-    bot.send_message(chat_id=message.chat.id, text=leaderboard_text)
-
-app.run()
-
+    # Save username in database
+    @app.on_message(filters.text & filters.private)
+    async def save_username(client, message):
+        username = message.text
+        
+        # Check for invalid characters in username
+        invalid_chars = [" ", ".", "@", "-", "/", "#"]
+        if any(char in username for char in invalid_chars):
+            await message.reply_text("You can only include _ in your username.")
+            return
+            
+        # Check for emojis in name
+        if any(char in emoji.UNICODE_EMOJI for char in name):
+            await message.reply_text("You can't use emojis in your name.")
+            return
+            
+        # Check if username is already taken
+        if collection.find_one({"username": username}):
+            await message.reply_text("Username already taken.")
+            return
+        
+        # Save username in database
+        collection.update_one({"user_id": user_id}, {"$set": {"username": username}})
+        
+        # Send message to choose gender
+        await message.reply_text("Choose Your Gender", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Boy", callback_data="boy"), InlineKeyboardButton("Girl", callback_data="girl")]]))
+    
+    # Save gender in database
+    @app.on_callback_query(filters.regex("^boy$"))
+    async def save_boy(client, callback_query):
+        collection.update_one({"user_id": user_id}, {"$set": {"gender": "Boy"}})
+        await callback_query.message.reply_text("Getting Your Own Style")
+        await asyncio.sleep(3)
+        collection.update_one({"user_id": user_id}, {"$set": {"style": random_style}})
+        await callback_query.message.edit_text(f"Your Own Style is {random_style} Style")
+        await callback_query.message.reply_photo("http://ibb.co/sRMYPzM", caption="Congrats for entering world", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Group", url="https://t.me/anime_x_isekai"), InlineKeyboardButton("Channel", url="https://t.me/anime_x_isekai")]]))
+    
+    @app.on_callback_query(filters.regex("^girl$"))
+    async def save_girl(client, callback_query):
+        collection.update_one({"user_id": user_id}, {"$set": {"gender": "Girl"}})
+        await callback_query.message.reply_text("Getting Your Own Style")
+        await asyncio.sleep(3)
+        collection.update_one({"user_id": user_id}, {"$set": {"style": random_style}})
+        await callback_query.message.edit_text(f"Your Own Style is {random_style} Style")
+        await callback_query.message.reply_photo("http://ibb.co/sRMYPzM", caption="Congrats for entering world", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Group", url="https://t.me/anime_x_isekai"), InlineKeyboardButton("Channel", url="https://t.me/anime_x_isekai")]]))
