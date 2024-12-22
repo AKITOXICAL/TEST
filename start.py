@@ -29,7 +29,7 @@ def start_command(client, message):
 @app.on_message(filters.command("refer"))
 def refer_command(bot, message):
     user_id = message.from_user.id
-    referral_link = f"https://t.me/Anime_X_Isekai_Bot{user_id}"
+    referral_link = f"https://t.me/Anime_X_Isekai_Bot?start={user_id}"
     
     bot.send_photo(chat_id=message.chat.id, photo="http://ibb.co/2Zy9qCb", caption=f"Your Referral Link: {referral_link}")
     
