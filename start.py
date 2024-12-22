@@ -4,7 +4,7 @@ import config as c
 from pymongo import MongoClient
 
 # Connect to MongoDB
-client = MongoClient("DB_URL","mongodb+srv://publicDB:publicDBbyKira@public.twckcqf.mongodb.net/?retryWrites=true&w=majority")
+client = MongoClient("mongodb+srv://publicDB:publicDBbyKira@public.twckcqf.mongodb.net/?retryWrites=true&w=majority")
 db = client["referral_bot"]
 referrals = db["referrals"]
 
